@@ -1,5 +1,12 @@
-import { Camera } from 'lucide-react';
+import { Camera } from "lucide-react";
+import Footer from "./components/footer";
+import Navbar from "./components/navbar";
 
-export default function App(){
-  return <h1 class="text-xl text-red-700">hello world <Camera /></h1>
+export default function App() {
+  return (
+    <>
+    <Navbar/>
+      <Footer />
+    </>
+  );
 }
