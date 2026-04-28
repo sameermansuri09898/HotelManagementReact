@@ -113,9 +113,14 @@ class LogoutView(APIView):
             )
     
 class changepasswordview(APIView):
+   permission_classes=[IsAuthenticated]
+   authentication_classes=[JWTAuthentication]
+
    def post(self,request):
       serializer=changepasswordview(data=request.data ,context={"request":request})
       if serializer.is_valid():
          serializer.save()
          return Response({'msg':'Password changed successfully'}, status=status.HTTP_200_OK)
       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+   
+   
