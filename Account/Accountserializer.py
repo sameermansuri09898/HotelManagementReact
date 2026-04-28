@@ -65,6 +65,28 @@ class Otpserializer(serializers.Serializer):
     return attrs
 
 
+class ResendSerializer(serializers.Serializer):
+   email=serializers.EmailField()
+
+   def validate_email(self,value):
+      email=value
+
+      if not email:
+         raise serializers.ValidationError("Email Address is Compulsory")
+      
+      try:
+          user=Baseuser.objects.get(email=email)
+      except Baseuser.DoesNotExist:
+         raise serializers.ValidationError("User") 
+       
+      if user.is_varified:
+         raise serializers.ValidationError("User is already Varified ")
+      
+      self.user=user
+
+      return value
+
+          
 class LoginSerailizer(serializers.Serializer):
    username=serializers.CharField()
    password=serializers.CharField()
@@ -73,3 +95,49 @@ class LoginSerailizer(serializers.Serializer):
       model=Baseuser
       fields='__all__'
       
+class Chanagepasswordserializer(serializers.Serializer):
+   email=serializers.EmailField()
+   old_password=serializers.CharField()
+   new_password=serializers.CharField()
+   confirm_new_password=serializers.CharField()
+
+
+   def validate(self,attrs):
+      user=self.context['request'].user
+      email=attrs.get('email')
+      old_password=attrs.get('old_password')
+      new_password=attrs.get('new_password')
+      confirm_new_password=attrs.get('confirm_new_password')
+
+      if new_password !=confirm_new_password:
+         raise serializers.ValidationError("Confirm password does not matched")
+      
+      if not email or not old_password or not new_password or not confirm_new_password:
+            raise serializers.ValidationError("All fields are required")
+      
+
+      user=Baseuser.objects.filter(email=email).first()
+
+      if user is None:
+         raise serializers.ValidationError("User is Invalid")
+      
+      if not user.check_password(old_password):
+            raise serializers.ValidationError("Invalid old password")
+      
+      if new_password == old_password:
+         raise serializers.ValidationError("new password is matched with old ")
+      
+      attrs['user']=user
+      return attrs
+   
+   def save(self):
+      user=self.validated_data['user']
+      new_password=self.validate['new_password']
+
+      user.make_password(new_password)
+      user.save()
+      return ({"mssg":"password chanage successfully "})
+
+
+
+       

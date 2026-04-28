@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Baseuser,Otp
-from .Accountserializer import Registrationsearlizer,Otpserializer,LoginSerailizer
+from .Accountserializer import Registrationsearlizer,Otpserializer,LoginSerailizer,ResendSerializer,Chanagepasswordserializer
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from django.utils import timezone
 from rest_framework import status
@@ -32,6 +32,8 @@ class RegistrationView(APIView):
     })
 
 class OtpView(APIView):
+  permission_classes = [AllowAny]
+  authentication_classes = []
   def post(self,request):
     serializers=Otpserializer(data=request.data)
     if serializers.is_valid():
@@ -41,6 +43,26 @@ class OtpView(APIView):
     return Response({
       "mssg":"Not valid"
     })
+
+class otpresendview(APIView):
+   permission_classes = [AllowAny]
+   authentication_classes = [] 
+   def post(self,request):
+      serializer=ResendSerializer(data=request.data)
+      if serializer.is_valid():
+         user=serializer.user
+         otp=genrate_otp()
+
+         Otp.objects.filter(user=user).delete()
+         Otp.objects.create(user=user,otp=otp)
+         send_otp_email(user.email, str(otp))
+
+         return Response(
+                {'msg': 'OTP sent successfully'},
+                status=status.HTTP_200_OK
+            )
+      return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
 class LoginView(APIView):
   def post(self,request):
@@ -89,3 +111,11 @@ class LogoutView(APIView):
                 {"error": "Invalid or expired token"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+    
+class changepasswordview(APIView):
+   def post(self,request):
+      serializer=changepasswordview(data=request.data ,context={"request":request})
+      if serializer.is_valid():
+         serializer.save()
+         return Response({'msg':'Password changed successfully'}, status=status.HTTP_200_OK)
+      return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  

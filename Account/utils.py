@@ -17,3 +17,6 @@ def send_otp_email(email, otp):
     recipient_list = [email]
     fail_silently=False
     send_mail(subject, message, email_from, recipient_list,fail_silently=fail_silently)
+
+   
+       
